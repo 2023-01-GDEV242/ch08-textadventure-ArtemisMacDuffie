@@ -1,8 +1,7 @@
 /**
- *  This class is the main class of the "World of Zuul" application. 
- *  "World of Zuul" is a very simple, text based adventure game.  Users 
- *  can walk around some scenery. That's all. It should really be extended 
- *  to make it more interesting!
+ *  This class is the main class of the "The World Beside Us" application. 
+ *  The World Beside US" is a text based adventure game.  Users can walk
+ *  around and interact with surreal scenery.
  * 
  *  To play this game, create an instance of this class and call the "play"
  *  method.
@@ -11,8 +10,10 @@
  *  rooms, creates the parser and starts the game.  It also evaluates and
  *  executes the commands that the parser returns.
  * 
- * @author  Michael Kölling and David J. Barnes
- * @version 2016.02.29
+ *  base code written by Michael Kölling and David J. Barnes 2016.02.29
+ *  
+ *  @author Artemis MacDuffie
+ *  @version 2023.03.27
  */
 
 public class Game 
@@ -34,30 +35,69 @@ public class Game
      */
     private void createRooms()
     {
-        Room outside, theater, pub, lab, office;
+        Room busStop, alley, marketWest, marketSquare, marketEast;
+        Room inn, stall, maskShop, trinket, dirtPath;
+        Room swamp, village, bridge, gates, circle;
+        Room basement;
       
         // create the rooms
-        outside = new Room("outside the main entrance of the university");
-        theater = new Room("in a lecture theater");
-        pub = new Room("in the campus pub");
-        lab = new Room("in a computing lab");
-        office = new Room("in the computing admin office");
+        busStop = new Room("standing at a bus stop");
+        alley = new Room("wandering through an unusually dark alleyway");
+        marketWest = new Room("in a strange marketplace. It seems to be dominated" +
+            " by food services");
+        marketSquare = new Room("in a strange marketplace. It seems to be dominated" +
+            " by artisans");
+        marketEast = new Room("in a strange marketplace. This corner of it is more" +
+            " for some reason");
+        inn = new Room("in a lively inn");
+        stall = new Room("at a food stall serving something you don't recognize");
+        maskShop = new Room("in a store that seems to specialize in quality" +
+            " masquerade masks");
+        dirtPath = new Room("on a dirt path winding through the city outskirts");
+        trinket = new Room("in a small store selling knick-knacks");
+        swamp = new Room("in a wooded wetland");
+        village = new Room("in a humble village populated by large, gangly creatures");
+        bridge = new Room("at one end of a long and foreboding bridge");
+        gates = new Room("at the mighty gates of a towering castle");
+        circle = new Room("in a forest clearing filled with mushrooms, some of" +
+            " which form a ring.");
+        basement = new Room("in a musty basement with a strange chalk" +
+            " circle on the floor");
         
         // initialise room exits
-        outside.setExit("east", theater);
-        outside.setExit("south", lab);
-        outside.setExit("west", pub);
-
-        theater.setExit("west", outside);
-
-        pub.setExit("east", outside);
-
-        lab.setExit("north", outside);
-        lab.setExit("east", office);
-
-        office.setExit("west", lab);
-
-        currentRoom = outside;  // start game outside
+        busStop.setExit("east", alley);
+        alley.setExit("east", marketWest);
+        marketWest.setExit("west", alley);
+        marketWest.setExit("north", inn);
+        marketWest.setExit("east", marketSquare);
+        marketWest.setExit("south", stall);
+        marketSquare.setExit("west", marketWest);
+        marketSquare.setExit("south", maskShop);
+        marketSquare.setExit("east", marketEast);
+        marketEast.setExit("west", marketSquare);
+        marketEast.setExit("north", trinket);
+        marketEast.setExit("east", bridge);
+        marketEast.setExit("south", dirtPath);
+        inn.setExit("south", marketWest);
+        inn.setExit("down", basement);
+        stall.setExit("north", marketWest);
+        maskShop.setExit("north", marketSquare);
+        trinket.setExit("south", marketEast);
+        dirtPath.setExit("north", marketEast);
+        dirtPath.setExit("south", swamp);
+        swamp.setExit("north", dirtPath);
+        swamp.setExit("east", circle);
+        swamp.setExit("west", village);
+        village.setExit("east", swamp);
+        bridge.setExit("west", marketEast);
+        bridge.setExit("east", gates);
+        gates.setExit("west", bridge);
+        circle.setExit("west", swamp);
+        circle.setExit("ring", basement);
+        basement.setExit("circle", circle);
+        basement.setExit("up", inn);
+        
+        currentRoom = busStop;  // start game at bus stop
     }
 
     /**
@@ -84,8 +124,8 @@ public class Game
     private void printWelcome()
     {
         System.out.println();
-        System.out.println("Welcome to the World of Zuul!");
-        System.out.println("World of Zuul is a new, incredibly boring adventure game.");
+        System.out.println("    ~~ Welcome to <The World Beside Us!> ~~");
+        System.out.println("Be curious, be cautious, be wise, and be brave.");
         System.out.println("Type '" + CommandWord.HELP + "' if you need help.");
         System.out.println();
         System.out.println(currentRoom.getLongDescription());
@@ -114,6 +154,14 @@ public class Game
             case GO:
                 goRoom(command);
                 break;
+                
+            case LOOK:
+                look();
+                break;
+                
+            case EAT:
+                eat(command);
+                break;
 
             case QUIT:
                 wantToQuit = quit(command);
@@ -131,8 +179,10 @@ public class Game
      */
     private void printHelp() 
     {
-        System.out.println("You are lost. You are alone. You wander");
-        System.out.println("around at the university.");
+        System.out.println("There's this dark alleyway you pass by on a");
+        System.out.println("regular basis. For some reason you've always");
+        System.out.println("felt drawn to it. Perhaps today is the day you");
+        System.out.println("finally explore it. Perhaps it will change you.");
         System.out.println();
         System.out.println("Your command words are:");
         parser.showCommands();
@@ -141,6 +191,7 @@ public class Game
     /** 
      * Try to go in one direction. If there is an exit, enter the new
      * room, otherwise print an error message.
+     * @param Command The command to go to another room.
      */
     private void goRoom(Command command) 
     {
@@ -156,12 +207,48 @@ public class Game
         Room nextRoom = currentRoom.getExit(direction);
 
         if (nextRoom == null) {
-            System.out.println("There is no door!");
+            System.out.println("There is nothing that way.");
         }
         else {
             currentRoom = nextRoom;
             System.out.println(currentRoom.getLongDescription());
         }
+    }
+    
+    /**
+     * Prints the longer version of the room description.
+     */
+    private void look() {
+        System.out.println(currentRoom.getLongDescription());
+    }
+    
+    /**
+     * Try to eat something. If there is food present, consume it,
+     * otherwise print an error message.
+     */
+    private void eat(Command command) {
+        if(!command.hasSecondWord()) {
+            // if there is no second word, we don't know what to eat...
+            System.out.println("Eat what?");
+            return;
+        }
+        
+        String food = command.getSecondWord();
+        
+        /* Once food is implemented it'll look something like this
+        
+        Item foodItem = inventory.getItem(food);
+        
+        if (foodItem == null) {
+            System.out.println("That isn't here.");
+        }
+        else {
+            System.out.println("You eat the " + food + ".");
+        }
+        
+        */
+        
+        System.out.println("You eat the " + food + ".");
     }
 
     /** 
@@ -178,5 +265,13 @@ public class Game
         else {
             return true;  // signal that we want to quit
         }
+    }
+    
+    /**
+     * The main method; it creates an instance of a game and initiates it.
+     */
+    public static void main(String[] args) {
+        Game newGame = new Game();
+        newGame.play();
     }
 }

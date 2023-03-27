@@ -1,14 +1,15 @@
 import java.util.HashMap;
 
 /**
- * This class is part of the "World of Zuul" application. 
- * "World of Zuul" is a very simple, text based adventure game.
+ * This class is part of the "The World Beside Us" application.
  * 
  * This class holds an enumeration of all command words known to the game.
  * It is used to recognise commands as they are typed in.
  *
- * @author  Michael Kölling and David J. Barnes
- * @version 2016.02.29
+ *  base code written by Michael Kölling and David J. Barnes 2016.02.29
+ *  
+ *  @author Artemis MacDuffie
+ *  @version 2023.03.27
  */
 
 public class CommandWords
