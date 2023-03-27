@@ -21,6 +21,8 @@ public class Room
 {
     private String description;
     private HashMap<String, Room> exits;        // stores exits of this room.
+    private HashMap<String, Boolean> keys;      // stores keys for moving between rooms as <direction, lock state>
+                                                // lock state: false is unlocked, true is locked
 
     /**
      * Create a room described "description". Initially, it has
@@ -31,7 +33,8 @@ public class Room
     public Room(String description) 
     {
         this.description = description;
-        exits = new HashMap<>();
+        exits = new HashMap<String, Room>();
+        keys = new HashMap<String, Boolean>();
     }
 
     /**
@@ -44,6 +47,15 @@ public class Room
         exits.put(direction, neighbor);
     }
 
+    /**
+     * Define a direction as needing a key.
+     * @param direction The direction of the exit.
+     * @param key       The key for that exit.
+     */
+    public void setKey(String direction, boolean key){
+        keys.put(direction, key);
+    }
+    
     /**
      * @return The short description of the room
      * (the one that was defined in the constructor).
@@ -72,8 +84,8 @@ public class Room
     private String getExitString()
     {
         String returnString = "Exits:";
-        Set<String> keys = exits.keySet();
-        for(String exit : keys) {
+        Set<String> localExits = exits.keySet();
+        for(String exit : localExits) {
             returnString += " " + exit;
         }
         return returnString;
@@ -88,6 +100,16 @@ public class Room
     public Room getExit(String direction) 
     {
         return exits.get(direction);
+    }
+    
+    /**
+     * 
+     */
+    public boolean isLocked(String direction) {
+        if (keys.get(direction) == null) {
+            return false;
+        }
+        return keys.get(direction);
     }
 }
 

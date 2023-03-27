@@ -1,3 +1,6 @@
+import java.util.ArrayList;
+import java.util.HashMap;
+
 /**
  *  This class is the main class of the "The World Beside Us" application. 
  *  The World Beside US" is a text based adventure game.  Users can walk
@@ -20,6 +23,8 @@ public class Game
 {
     private Parser parser;
     private Room currentRoom;
+    private ArrayList<GameItem> inventory;
+    private HashMap<Room, GameItem> itemLocations;
         
     /**
      * Create the game and initialise its internal map.
@@ -28,6 +33,8 @@ public class Game
     {
         createRooms();
         parser = new Parser();
+        inventory = new ArrayList<GameItem>();
+        itemLocations = new HashMap<Room, GameItem>();
     }
 
     /**
@@ -66,6 +73,7 @@ public class Game
         
         // initialise room exits
         busStop.setExit("east", alley);
+        alley.setExit("west", busStop);
         alley.setExit("east", marketWest);
         marketWest.setExit("west", alley);
         marketWest.setExit("north", inn);
@@ -97,7 +105,12 @@ public class Game
         basement.setExit("circle", circle);
         basement.setExit("up", inn);
         
+        // set keys
+        alley.setKey("west", false);
+        
         currentRoom = busStop;  // start game at bus stop
+        
+        
     }
 
     /**
@@ -210,8 +223,13 @@ public class Game
             System.out.println("There is nothing that way.");
         }
         else {
-            currentRoom = nextRoom;
-            System.out.println(currentRoom.getLongDescription());
+            if (currentRoom.isLocked(direction)){
+                System.out.println("Your way is blocked.");
+            }
+            else{
+                currentRoom = nextRoom;
+                System.out.println(currentRoom.getLongDescription());
+            }
         }
     }
     
