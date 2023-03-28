@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Stack;
 
 /**
  *  This class is the main class of the "The World Beside Us" application. 
@@ -25,6 +26,7 @@ public class Game
     private Room currentRoom;
     private ArrayList<GameItem> inventory;
     private HashMap<Room, GameItem> itemLocations;
+    private Stack<Room> priorRooms;
         
     /**
      * Create the game and initialise its internal map.
@@ -34,6 +36,7 @@ public class Game
         parser = new Parser();
         inventory = new ArrayList<GameItem>();
         itemLocations = new HashMap<Room, GameItem>();
+        priorRooms = new Stack<Room>();
         createRooms();
     }
 
@@ -124,6 +127,13 @@ public class Game
         GameItem jewel = new GameItem("jewel", "a splendid blue faceted strone.",
             "You show off the sparkling gem.", false);
         itemLocations.put(village, jewel);
+        GameItem necklace = new GameItem("necklace", "a simply but charming " +
+            "wooden bead necklace.", "You put it around your neck. It looks nice.", false);
+        itemLocations.put(trinket, necklace);
+        GameItem armoire = new GameItem("armoire", "an expertly made walnut armoire.",
+            "You step into it and chill before getting bored.\nIt's really heavy so " +
+            "you decide to leave it behind.", true);
+        itemLocations.put(inn, armoire);
         
         // start game at bus stop
         currentRoom = busStop;
@@ -173,7 +183,9 @@ public class Game
 
         switch (commandWord) {
             case UNKNOWN:
-                System.out.println("I don't know what you mean...");
+                System.out.println("Sorry, that's not a command.");
+                System.out.println("Your command words are:");
+                parser.showCommands();
                 break;
 
             case HELP:
@@ -198,6 +210,14 @@ public class Game
                 
             case USE:
                 use(command);
+                break;
+                
+            case BACK:
+                back();
+                break;
+                
+            case DROP:
+                drop(command);
                 break;
                 
             case QUIT:
@@ -251,6 +271,7 @@ public class Game
                 System.out.println("Your way is blocked.");
             }
             else{
+                priorRooms.add(currentRoom);
                 currentRoom = nextRoom;
                 System.out.println(currentRoom.getLongDescription());
                 roomItemDescription();
@@ -346,6 +367,30 @@ public class Game
     }
     
     /**
+     * Remove and discard an inventory item.
+     * 
+     * @param command The command to drop the item.
+     */
+    private void drop(Command command) {
+        if(!command.hasSecondWord()) {
+            System.out.println("Drop what?");
+            return;
+        }
+        
+        String itemName = command.getSecondWord().toLowerCase();
+        
+        for (GameItem inventoryItem : inventory) {
+            if (inventoryItem.getName().equals(itemName)) {
+                inventory.remove(inventoryItem);
+                System.out.println("You drop the " + itemName + ".");
+                return;
+            }
+        }
+        
+        System.out.println("You don't have any " + itemName + ".");
+    }
+    
+    /**
      * Use an inventory item.
      * 
      * @param command The command to use the item.
@@ -379,7 +424,7 @@ public class Game
                             " will reward you\nhandsomely for it. They can tell " +
                             "you're not from here,\nand they say it's the only way " +
                             "you can return home\nat this point. After a moment to " +
-                            "think on it,\nyou decided that it is indeed time to leave.");
+                            "think on it,\nyou decide that it is indeed time to leave.");
                         
                         System.out.println("Thank you for playing.  Good bye.");
                         System.exit(0);
@@ -392,7 +437,21 @@ public class Game
         }
         System.out.println("You don't have any " + itemName + ".");
     }
-
+    
+    /**
+     * Go to the previous room.
+     */
+    private void back() {
+        if (!priorRooms.isEmpty()){
+            currentRoom = priorRooms.pop();
+            System.out.println(currentRoom.getLongDescription());
+            roomItemDescription();
+        }
+        else {
+            System.out.println("You are where you started.");
+        }
+    }
+    
     /** 
      * "Quit" was entered. Check the rest of the command to see
      * whether we really quit the game.
