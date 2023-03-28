@@ -1,25 +1,26 @@
 
 /**
- * Write a description of class Inventory here.
+ * Write a description of class GameItem here.
  *
  * @author Artemis MacDuffie
  * @version 2023.03.27
  */
 public class GameItem
 {
-    // instance variables - replace the example below with your own
     private String name;
-    private String location;
-    private String description;
-
+    private String description; //How the item's described when examined (full sentences)
+    private String effect;      //How the item's described when used
+    private boolean weight;     // false for light, true for heavy
+    
     /**
-     * Constructor for objects of class Inventory
+     * Constructor for objects of class GameItem
      */
-    public GameItem(String name, String location, String description)
+    public GameItem(String name, String description, String effect, boolean weight)
     {
         this.name = name;
-        this.location = location;
         this.description = description;
+        this.effect = effect;
+        this.weight = weight;
     }
 
     /**
@@ -32,20 +33,34 @@ public class GameItem
     }
     
     /**
-     * Location getter
-     * 
-     * @return The location field
-     */
-    public String getLocation() {
-        return location;
-    }
-    
-    /**
      * Description getter
      * 
      * @return The location field
      */
     public String getDescription() {
-        return description;
+        return (description + " It looks " + getWeight() + ".");
+    }
+    
+    /**
+     * Effect getter
+     * 
+     * @return The effect field
+     */
+    public String getEffect() {
+        return effect;
+    }
+    
+    /**
+     * Returns a string describing the weight of the item.
+     * 
+     * @return "heavy" or "light"
+     */
+    private String getWeight() {
+        if (weight) {
+            return "heavy";
+        }
+        else {
+            return "light";
+        }
     }
 }

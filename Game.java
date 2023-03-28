@@ -31,44 +31,45 @@ public class Game
      */
     public Game() 
     {
-        createRooms();
         parser = new Parser();
         inventory = new ArrayList<GameItem>();
         itemLocations = new HashMap<Room, GameItem>();
+        createRooms();
     }
 
     /**
      * Create all the rooms and link their exits together.
+     * Also set "keys" (exits that can be blocked) and items.
      */
     private void createRooms()
     {
         Room busStop, alley, marketWest, marketSquare, marketEast;
         Room inn, stall, maskShop, trinket, dirtPath;
-        Room swamp, village, bridge, gates, circle;
-        Room basement;
+        Room swamp, village, bridge, gates, circle, basement;
       
         // create the rooms
         busStop = new Room("standing at a bus stop");
         alley = new Room("wandering through an unusually dark alleyway");
-        marketWest = new Room("in a strange marketplace. It seems to be dominated" +
+        marketWest = new Room("in a strange marketplace.\nIt seems to be dominated" +
             " by food services");
-        marketSquare = new Room("in a strange marketplace. It seems to be dominated" +
+        marketSquare = new Room("in a strange marketplace.\nIt seems to be dominated" +
             " by artisans");
-        marketEast = new Room("in a strange marketplace. This corner of it is more" +
-            " for some reason");
+        marketEast = new Room("in a strange marketplace.\nThis corner of it is more" +
+            " unoccupied for some reason");
         inn = new Room("in a lively inn");
         stall = new Room("at a food stall serving something you don't recognize");
-        maskShop = new Room("in a store that seems to specialize in quality" +
+        maskShop = new Room("in a store that seems to specialize\nin quality" +
             " masquerade masks");
         dirtPath = new Room("on a dirt path winding through the city outskirts");
         trinket = new Room("in a small store selling knick-knacks");
         swamp = new Room("in a wooded wetland");
         village = new Room("in a humble village populated by large, gangly creatures");
         bridge = new Room("at one end of a long and foreboding bridge");
-        gates = new Room("at the mighty gates of a towering castle");
-        circle = new Room("in a forest clearing filled with mushrooms, some of" +
+        gates = new Room("at the mighty gates of a towering castle,\n" +
+            "where armored guards with spears eye you with suspicion", true);
+        circle = new Room("in a forest clearing filled with mushrooms,\nsome of" +
             " which form a ring.");
-        basement = new Room("in a musty basement with a strange chalk" +
+        basement = new Room("in a musty basement with a strange\nchalk" +
             " circle on the floor");
         
         // initialise room exits
@@ -106,11 +107,26 @@ public class Game
         basement.setExit("up", inn);
         
         // set keys
-        alley.setKey("west", false);
+        inn.setKey("down"); // you cannot go down to the basement
+        //swamp.setKey("west"); // you cannot enter the village
+        // The intent was that you needed to be wearing the mask to
+        // enter the village, but I'm unsure how to implement that.
         
-        currentRoom = busStop;  // start game at bus stop
+        // place items
+        GameItem skewer = new GameItem("skewer", "a savory looking veggie " +
+            "skewer,\nthough you cannot identify what plants it's made from.",
+            "It's delicious, but for some reason\n" +
+            "you immediately feel a sense of dread.", false);
+        itemLocations.put(stall, skewer);
+        GameItem mask = new GameItem("mask", "a beautiful mask, appropriate\n" +
+            "for a masquerade ball.", "You put it on. It makes you feel regal.", false);
+        itemLocations.put(maskShop, mask);
+        GameItem jewel = new GameItem("jewel", "a splendid blue faceted strone.",
+            "You show off the sparkling gem.", false);
+        itemLocations.put(village, jewel);
         
-        
+        // start game at bus stop
+        currentRoom = busStop;
     }
 
     /**
@@ -172,10 +188,18 @@ public class Game
                 look();
                 break;
                 
-            case EAT:
-                eat(command);
+            case TAKE:
+                take(command);
                 break;
-
+            
+            case EXAMINE:
+                examine(command);
+                break;
+                
+            case USE:
+                use(command);
+                break;
+                
             case QUIT:
                 wantToQuit = quit(command);
                 break;
@@ -204,7 +228,7 @@ public class Game
     /** 
      * Try to go in one direction. If there is an exit, enter the new
      * room, otherwise print an error message.
-     * @param Command The command to go to another room.
+     * @param command The command to go to another room.
      */
     private void goRoom(Command command) 
     {
@@ -214,7 +238,7 @@ public class Game
             return;
         }
 
-        String direction = command.getSecondWord();
+        String direction = command.getSecondWord().toLowerCase();
 
         // Try to leave current room.
         Room nextRoom = currentRoom.getExit(direction);
@@ -229,6 +253,7 @@ public class Game
             else{
                 currentRoom = nextRoom;
                 System.out.println(currentRoom.getLongDescription());
+                roomItemDescription();
             }
         }
     }
@@ -238,35 +263,134 @@ public class Game
      */
     private void look() {
         System.out.println(currentRoom.getLongDescription());
+        roomItemDescription();
     }
     
     /**
-     * Try to eat something. If there is food present, consume it,
-     * otherwise print an error message.
+     * Prints the description of the item in a room.
      */
-    private void eat(Command command) {
+    private void roomItemDescription() {
+        if (itemLocations.get(currentRoom) != null) {
+            System.out.print("There's something here: ");
+            System.out.println(itemLocations.get(currentRoom).getDescription());
+        }
+    }
+    
+    /**
+     * Take something in the room. If there is something, it will
+     * be added to the inventory, otherwise print an error message.
+     * 
+     * @param command The command to take something.
+     */
+    private void take(Command command) {
         if(!command.hasSecondWord()) {
-            // if there is no second word, we don't know what to eat...
-            System.out.println("Eat what?");
+            System.out.println("Take what?");
             return;
         }
         
-        String food = command.getSecondWord();
+        String itemName = command.getSecondWord().toLowerCase();
         
-        /* Once food is implemented it'll look something like this
-        
-        Item foodItem = inventory.getItem(food);
-        
-        if (foodItem == null) {
-            System.out.println("That isn't here.");
+        if (itemLocations.get(currentRoom) != null) {
+            GameItem placeItem = itemLocations.get(currentRoom);
+            
+            if (placeItem.getName().equals(itemName)) {
+                inventory.add(placeItem);
+                itemLocations.remove(currentRoom);
+                System.out.println("You took the " + itemName + ".");
+            }
+            else {
+                System.out.println("That item isn't here.");
+            }
         }
         else {
-            System.out.println("You eat the " + food + ".");
+            System.out.println("There is nothing here to take.");
+        }
+    }
+    
+    /**
+     * Look closely at the inventory or something in it,
+     * otherwise print an error message.
+     * 
+     * @param command The command to examine something.
+     */
+    private void examine(Command command) {
+        if(!command.hasSecondWord()) {
+            System.out.println("Examine what?");
+            return;
         }
         
-        */
+        String itemName = command.getSecondWord().toLowerCase();
         
-        System.out.println("You eat the " + food + ".");
+        if (itemName.equals("inventory")) {
+            if (inventory.size() > 0) {
+                System.out.println("You currently have:");
+                for (GameItem inventoryItem : inventory) {
+                    System.out.println("   > " + inventoryItem.getName());
+                }
+                return;
+            }
+            else {
+                System.out.println("Your inventory is empty.");
+                return;
+            }
+        }
+        
+        for (GameItem inventoryItem : inventory) {
+            if (inventoryItem.getName().equals(itemName)) {
+                System.out.println("It is " + inventoryItem.getDescription());
+                return;
+            }
+        }
+        
+        System.out.println("That doesn't seem to be here.");
+    }
+    
+    /**
+     * Use an inventory item.
+     * 
+     * @param command The command to use the item.
+     */
+    private void use(Command command) {
+        if(!command.hasSecondWord()) {
+            System.out.println("Use what?");
+            return;
+        }
+        
+        String itemName = command.getSecondWord().toLowerCase();
+        
+        for (GameItem inventoryItem : inventory) {
+            if (inventoryItem.getName().equals(itemName)) {
+                /*
+                *  I won't lie, I'm not sure how to implement this past this point.
+                *  I know that as it is it's not good because it operates off the
+                *  method's knowledge of the item name, and the entire premise of
+                *  isFinalRoom feels very flawed.
+                *  
+                *  Because the rooms are not in a collection, I'm not sure how to
+                *  iterate through them. If I could, I could probably change the lock
+                *  states that way, which is the point of the other two items.
+                *  As it stands I'm kind of stumped.
+                */
+                System.out.println(inventoryItem.getEffect());
+                if (itemName.equals("jewel")) {
+                    if (currentRoom.isFinalRoom()) {
+                        System.out.println("The guards are in awe of the clarity " +
+                            "of the stone.\nThey tell you that the lord of the castle" +
+                            " will reward you\nhandsomely for it. They can tell " +
+                            "you're not from here,\nand they say it's the only way " +
+                            "you can return home\nat this point. After a moment to " +
+                            "think on it,\nyou decided that it is indeed time to leave.");
+                        
+                        System.out.println("Thank you for playing.  Good bye.");
+                        System.exit(0);
+                    }
+                    return;
+                }
+                inventory.remove(inventoryItem);
+                return;
+            }
+        }
+        System.out.println("You don't have any " + itemName + ".");
     }
 
     /** 

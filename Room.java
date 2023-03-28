@@ -20,14 +20,21 @@ import java.util.Iterator;
 public class Room 
 {
     private String description;
-    private HashMap<String, Room> exits;        // stores exits of this room.
-    private HashMap<String, Boolean> keys;      // stores keys for moving between rooms as <direction, lock state>
-                                                // lock state: false is unlocked, true is locked
-
+    private HashMap<String, Room> exits;    // stores exits of this room.
+    
+    // stores keys for moving between rooms as <direction, lock state>
+    // lock state: false is unlocked, true is locked
+    private HashMap<String, Boolean> keys;      
+    
+    private boolean finalExit;  // whether or not this is the last room
+                                                
     /**
      * Create a room described "description". Initially, it has
      * no exits. "description" is something like "a kitchen" or
      * "an open court yard".
+     * 
+     * It is assumed that a given room is NOT the final room.
+     * 
      * @param description The room's description.
      */
     public Room(String description) 
@@ -35,6 +42,19 @@ public class Room
         this.description = description;
         exits = new HashMap<String, Room>();
         keys = new HashMap<String, Boolean>();
+        finalExit = false;
+    }
+    
+    /**
+     * Alternate constructor. Assigning true to finalExit
+     * allows this room to be marked as the final room.
+     */
+    public Room(String description, boolean exit) 
+    {
+        this.description = description;
+        exits = new HashMap<String, Room>();
+        keys = new HashMap<String, Boolean>();
+        finalExit = exit;
     }
 
     /**
@@ -52,8 +72,8 @@ public class Room
      * @param direction The direction of the exit.
      * @param key       The key for that exit.
      */
-    public void setKey(String direction, boolean key){
-        keys.put(direction, key);
+    public void setKey(String direction){
+        keys.put(direction, true);
     }
     
     /**
@@ -100,6 +120,17 @@ public class Room
     public Room getExit(String direction) 
     {
         return exits.get(direction);
+    }
+    
+    /**
+     * Return whether or not this room is flagged as the final room.
+     * @return True if it's flagged, otherwise return false.
+     */
+    public boolean isFinalRoom() {
+        if (finalExit) {
+            return true;
+        }
+        return false;
     }
     
     /**
