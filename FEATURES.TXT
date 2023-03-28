@@ -1,0 +1,12 @@
+C level features:
+>Drop and examine commands
+>Streamlined printing
+
+B level features:
+>Items (up to one per room)
+>Back command
+>Back command can be repeated
+
+A level features:
+>Transporter (ring in woods, circle in basement)
+>One way door (you can exit the basement, but cannot enter)

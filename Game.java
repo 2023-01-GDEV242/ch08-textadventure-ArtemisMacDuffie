@@ -411,10 +411,16 @@ public class Game
                 *  method's knowledge of the item name, and the entire premise of
                 *  isFinalRoom feels very flawed.
                 *  
-                *  Because the rooms are not in a collection, I'm not sure how to
-                *  iterate through them. If I could, I could probably change the lock
+                *  Because the rooms are not in a collection, I can't iterate
+                *  through them. If I could, I could probably change the lock
                 *  states that way, which is the point of the other two items.
-                *  As it stands I'm kind of stumped.
+                
+                *  I could rewrite the rooms as a set so they can be iterated, and
+                *  then make a hash map linking items to the places where they can
+                *  be used, or places where they produce an effect.
+                *  
+                *  That's a lot of reworking though, and sadly, I'm out of
+                *  time for this assignment, so I think this is it for now.
                 */
                 System.out.println(inventoryItem.getEffect());
                 if (itemName.equals("jewel")) {
